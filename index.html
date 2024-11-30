@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Blockchain</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='block.css') }}">
+
+</head>
+<body>
+    <h1>Election Blockchain</h1>
+    <div id="app">
+        <form id="voteForm">
+            <label for="voterId">Voter ID:</label>
+            <input type="text" id="voterId" name="voterId" required><br><br>
+
+            <label for="candidate">Candidate:</label>
+            <select id="candidate" name="candidate" required>
+                <option value="Alice">Alice</option>
+                <option value="Bob">Bob</option>
+            </select><br><br>
+
+            <button type="submit">Submit Vote</button>
+        </form>
+
+        <h2>Blockchain Data</h2>
+        <div id="blockchain"></div>
+    </div>
+
+    <script>
+        // Fetch blockchain data and display it
+        function fetchBlockchain() {
+            fetch('/get_blockchain')
+                .then(response => response.json())
+                .then(data => {
+                    const blockchainDiv = document.getElementById('blockchain');
+                    blockchainDiv.innerHTML = "";
+                    data.forEach(block => {
+                        blockchainDiv.innerHTML += `
+                            <p>Index: ${block.index}</p>
+                            <p>Timestamp: ${block.timestamp}</p>
+                            <p>Data: ${JSON.stringify(block.data)}</p>
+                            <p>Previous Hash: ${block.previous_hash}</p>
+                            <p>Hash: ${block.hash}</p>
+                            <hr>
+                        `;
+                    });
+                });
+        }
+
+        // Handle form submission
+        document.getElementById('voteForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const voterId = document.getElementById('voterId').value;
+            const candidate = document.getElementById('candidate').value;
+
+            fetch('/add_vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `voterId=${voterId}&candidate=${candidate}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchBlockchain();  // Refresh blockchain data
+            });
+        });
+
+        // Load the blockchain data when the page loads
+        window.onload = fetchBlockchain;
+    </script>
+</body>
+</html>
